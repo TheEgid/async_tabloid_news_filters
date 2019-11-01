@@ -1,5 +1,5 @@
 aiohttp==3.*
-cchardet==2.*
+chardet==3.*
 aiodns==2.*
 beautifulsoup4==4.*
 requests==2.*

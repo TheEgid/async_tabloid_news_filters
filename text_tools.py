@@ -1,12 +1,20 @@
 import pymorphy2
 import string
+import re
+
+
+def has_latin_letters(string):
+    characherRegex = re.compile(r'[a-zA-Z]')
+    return any(characherRegex.search(symbol) for symbol in string)
 
 
 def _clean_word(word):
     word = word.replace('«', '').replace('»', '').replace('…', '')
-    # FIXME какие еще знаки пунктуации часто встречаются ?
+    word = word.replace('"', '').replace('"', '').replace('_', '')
+    word = word.replace(':', '').replace('.', '').replace(',', '')
     word = word.strip(string.punctuation)
-    return word
+    if not word.isdigit():
+        return word
 
 
 def split_by_words(morph, text):
@@ -14,10 +22,17 @@ def split_by_words(morph, text):
     words = []
     for word in text.split():
         cleaned_word = _clean_word(word)
-        normalized_word = morph.parse(cleaned_word)[0].normal_form
-        if len(normalized_word) > 2 or normalized_word == 'не':
-            words.append(normalized_word)
-    return words
+        if cleaned_word:
+            normalized_word = morph.parse(cleaned_word)[0].normal_form
+            if len(normalized_word) > 2 or normalized_word == 'не':
+                words.append(normalized_word)
+    return [word for word in words if not has_latin_letters(word)]
+
+
+def test_has_latin_letters():
+    assert has_latin_letters('string') is True
+    assert has_latin_letters('stringЮЮ') is True
+    assert has_latin_letters('Проверка1') is False
 
 
 def test_split_by_words():
@@ -25,18 +40,21 @@ def test_split_by_words():
     # Старайтесь ораганизовать свой код так, чтоб создавать экземпляр MorphAnalyzer заранее и в единственном числе
     morph = pymorphy2.MorphAnalyzer()
 
-    assert split_by_words(morph, 'Во-первых, он хочет, чтобы') == ['во-первых', 'хотеть', 'чтобы']
-
-    assert split_by_words(morph, '«Удивительно, но это стало началом!»') == ['удивительно', 'это', 'стать', 'начало']
+    assert split_by_words(morph, 'Во-первых, он хочет, чтобы') == \
+           ['во-первых', 'хотеть', 'чтобы']
+    assert split_by_words(morph, '«Удивительно, но это стало началом!»') == \
+           ['удивительно', 'это', 'стать', 'начало']
 
 
 def calculate_jaundice_rate(article_words, charged_words):
-    """Расчитывает желтушность текста, принимает список "заряженных" слов и ищет их внутри article_words."""
+    """Расчитывает желтушность текста,
+    принимает список "заряженных" слов и ищет их внутри article_words."""
 
     if not article_words:
         return 0.0
 
-    found_charged_words = [word for word in article_words if word in set(charged_words)]
+    found_charged_words = [word for word in article_words if
+                           word in set(charged_words)]
 
     score = len(found_charged_words) / len(article_words) * 100
 
@@ -45,4 +63,5 @@ def calculate_jaundice_rate(article_words, charged_words):
 
 def test_calculate_jaundice_rate():
     assert -0.01 < calculate_jaundice_rate([], []) < 0.01
-    assert 33.0 < calculate_jaundice_rate(['все', 'аутсайдер', 'побег'], ['аутсайдер', 'банкротство']) < 34.0
+    assert 33.0 < calculate_jaundice_rate(['все', 'аутсайдер', 'побег'],
+                                          ['аутсайдер', 'банкротство']) < 34.0
