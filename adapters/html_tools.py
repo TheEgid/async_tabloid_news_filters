@@ -29,13 +29,17 @@ def remove_buzz_attrs(soup):
 
     return soup
 
-def remove_buzz_tags(soup, blacklist=DEFAULT_BLACKLIST_TAGS, unwraplist=DEFAULT_UNWRAPLIST_TAGS):
+
+def remove_buzz_tags(soup):
     """Remove most of tags, leaves only tags significant for text analysis."""
+    blacklist = DEFAULT_BLACKLIST_TAGS
+    unwraplist = DEFAULT_UNWRAPLIST_TAGS
     for tag in soup.find_all(True):
         if tag.name in blacklist:
             tag.decompose()
         elif tag.name in unwraplist:
             tag.unwrap()
+
 
 def remove_all_tags(soup):
     """Unwrap all tags."""
