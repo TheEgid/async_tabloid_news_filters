@@ -1,11 +1,10 @@
-import pymorphy2
 import string
 import re
 
 
 def has_latin_letters(string):
-    characherRegex = re.compile(r'[a-zA-Z]')
-    return any(characherRegex.search(symbol) for symbol in string)
+    characherregex = re.compile(r'[a-zA-Z]')
+    return any(characherregex.search(symbol) for symbol in string)
 
 
 def _clean_word(word):
@@ -38,10 +37,7 @@ def calculate_jaundice_rate(article_words, charged_words):
 
     found_charged_words = [word for word in article_words if
                            word in set(charged_words)]
-
     score = len(found_charged_words) / len(article_words) * 100
-
     return round(score, 2)
-
 
 

@@ -13,8 +13,8 @@ class TestInosmiRu(unittest.TestCase):
         link = 'https://inosmi.ru/economic/20190629/245384784.html'
         resp = requests.get(link)
         resp.raise_for_status()
-        clean_text = sanitize(resp.text)
-        clean_plaintext = sanitize(resp.text, plaintext=True)
+        _, clean_text = sanitize(resp.text)
+        _, clean_plaintext = sanitize(resp.text, plaintext=True)
 
         self.assertTrue(clean_text.startswith('<article>'))
         self.assertTrue(clean_text.endswith('</article>'))

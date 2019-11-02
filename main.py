@@ -1,13 +1,23 @@
 import aiohttp
 import asyncio
 import pymorphy2
-from bs4 import BeautifulSoup
-
+import aiofiles
 import os
 import sys
+
+from helpers import create_handy_nursery
 from text_tools import split_by_words
 from text_tools import calculate_jaundice_rate
 from adapters import SANITIZERS
+
+
+TEST_ARTICLES = [
+    'https://inosmi.ru/economic/20191101/246146220.html',
+    'https://inosmi.ru/politic/20191030/246128347.html',
+    'https://inosmi.ru/politic/20191101/246151423.html',
+    'https://inosmi.ru/politic/20191101/246150929.html',
+    'https://inosmi.ru/economic/20190629/245384784.html',
+]
 
 
 async def fetch(session, url):
@@ -18,35 +28,44 @@ async def fetch(session, url):
 
 def get_morth_raw(_html):
     sanitize = SANITIZERS["inosmi_ru"]
-    clean_text = sanitize(_html)
-    return clean_text
+    clean_text_header, clean_text = sanitize(_html)
+    return clean_text_header, clean_text
 
 
-dictionary_words = ['разрушение', 'бомба', 'пожар', 'погибший', 'глобальный',
-                 'ресурс', 'выступать', 'ошибка', 'угроза', 'противопоставлять',
-                 'предостережение']
-
-
-async def get_article_text():
+async def get_article_text(article_url):
     async with aiohttp.ClientSession() as session:
-        html = await fetch(session,
-                           'https://inosmi.ru/economic/20191101/246146220.html')
+        html = await fetch(session, article_url)
         return get_morth_raw(html)
 
 
-async def process_article():
-    clean_text = await get_article_text()
+async def process_article(article_url):
+    clean_text_header, clean_text = await get_article_text(article_url)
     morph = pymorphy2.MorphAnalyzer()
     article_words = split_by_words(morph, clean_text)
+    negative_words = await handle_index_page(r'charged_dict\negative_words.txt')
+    jaundice_rate = calculate_jaundice_rate(article_words, negative_words)
+    return clean_text_header, jaundice_rate, len(article_words)
 
-    print(article_words)
-    jaundice_rate = calculate_jaundice_rate(article_words, dictionary_words)
-    print(f'Рейтинг: {jaundice_rate}\nСлов в статье: {len(article_words)}')
 
+async def handle_index_page(filepath):
+    async with aiofiles.open(filepath, mode='r', encoding='utf8') as f:
+        return [line.strip() for line in await f.readlines()]
 
 
 async def main():
-    await process_article()
+    _queue = list()
+
+    async with create_handy_nursery() as nursery:
+        for article_url in TEST_ARTICLES:
+            _queue.append(
+                nursery.start_soon(process_article(article_url)))
+            raw_results, _ = await asyncio.wait(_queue)
+
+    for raw_result in raw_results:
+        clean_text_header, jaundice_rate, article_words = raw_result.result()
+        print(f'\nЗаголовок: {clean_text_header}\n'
+              f'Рейтинг: {jaundice_rate}\n'
+              f'Слов в статье: {article_words}\n')
 
 
 if __name__ == '__main__':
