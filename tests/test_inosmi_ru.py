@@ -1,20 +1,28 @@
 import unittest
 import pytest
 import requests
-import sys
-sys.path.append('..')
-from adapters.inosmi_ru import sanitize
-from adapters.exceptions import ArticleNotFound
+from adapters import SANITIZERS
+from adapters import ArticleNotFound, HeaderNotFound
 
+sanitize_article_text, sanitize_article_header = SANITIZERS["inosmi_ru"]
+
+link = 'https://inosmi.ru/economic/20190629/245384784.html'
 
 @pytest.mark.adapters_inosmi_ru
 class TestInosmiRu(unittest.TestCase):
-    def test_sanitize(self):
-        link = 'https://inosmi.ru/economic/20190629/245384784.html'
+
+    def test_sanitize_article_header(self):
         resp = requests.get(link)
         resp.raise_for_status()
-        _, clean_text = sanitize(resp.text)
-        _, clean_plaintext = sanitize(resp.text, plaintext=True)
+        clean_header = sanitize_article_header(resp.text)
+        self.assertFalse(clean_header.startswith('<h1>'))
+        self.assertFalse(clean_header.endswith('</h1>'))
+
+    def test_sanitize_article_text(self):
+        resp = requests.get(link)
+        resp.raise_for_status()
+        clean_text = sanitize_article_text(resp.text)
+        clean_plaintext = sanitize_article_text(resp.text, plaintext=True)
 
         self.assertTrue(clean_text.startswith('<article>'))
         self.assertTrue(clean_text.endswith('</article>'))
@@ -34,8 +42,14 @@ class TestInosmiRu(unittest.TestCase):
         self.assertTrue('</article>' not in clean_plaintext)
         self.assertTrue('<h1>' not in clean_plaintext)
 
-    def test_sanitize_wrong_url(self):
+    def test_wrong_url(self):
         resp = requests.get('http://example.com')
-        resp.raise_for_status()
         with self.assertRaises(ArticleNotFound):
-            sanitize(resp.text)
+            resp.raise_for_status()
+            sanitize_article_text(resp.text)
+
+    def test_should_be_header_on_page(self):
+        resp = requests.get('https://raw.githubusercontent.com/psf/requests/master/requests/api.py')
+        with self.assertRaises(HeaderNotFound):
+            resp.raise_for_status()
+            sanitize_article_header(resp)

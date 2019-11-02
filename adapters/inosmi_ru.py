@@ -3,15 +3,16 @@ from .exceptions import ArticleNotFound, HeaderNotFound
 from .html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
 
 
-def get_header_name(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    header = soup.find('h1', {'class': 'article-header__title'}).text
-    if not header:
+def sanitize_article_header(html):
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+        header = soup.find('h1', {'class': 'article-header__title'}).text
+    except (AttributeError,TypeError):
         raise HeaderNotFound()
     return header
 
 
-def sanitize(html, plaintext=False):
+def sanitize_article_text(html, plaintext=False):
     soup = BeautifulSoup(html, 'html.parser')
     articles = soup.select("article.article")
 
@@ -38,5 +39,4 @@ def sanitize(html, plaintext=False):
         remove_all_tags(article)
         article_text = article.get_text()
 
-    header = get_header_name(html)
-    return header, article_text.strip()
+    return article_text.strip()

@@ -26,25 +26,26 @@ async def fetch(session, url):
         return await response.text()
 
 
-def get_morth_raw(_html):
-    sanitize = SANITIZERS["inosmi_ru"]
-    clean_text_header, clean_text = sanitize(_html)
+def get_clean_data(_html):
+    sanitize_article_text, sanitize_article_header = SANITIZERS["inosmi_ru"]
+    clean_text_header = sanitize_article_header(_html)
+    clean_text = sanitize_article_text(_html)
     return clean_text_header, clean_text
 
 
 async def get_article_text(article_url):
     async with aiohttp.ClientSession() as session:
         html = await fetch(session, article_url)
-        return get_morth_raw(html)
+        return get_clean_data(html)
 
 
 async def process_article(article_url):
-    clean_text_header, clean_text = await get_article_text(article_url)
+    clean_header, clean_text = await get_article_text(article_url)
     morph = pymorphy2.MorphAnalyzer()
     article_words = split_by_words(morph, clean_text)
-    negative_words = await handle_index_page(r'charged_dict\negative_words.txt')
+    negative_words = await handle_index_page(r'charged_dict/negative_words.txt')
     jaundice_rate = calculate_jaundice_rate(article_words, negative_words)
-    return clean_text_header, jaundice_rate, len(article_words)
+    return clean_header, jaundice_rate, len(article_words)
 
 
 async def handle_index_page(filepath):
@@ -57,8 +58,7 @@ async def main():
 
     async with create_handy_nursery() as nursery:
         for article_url in TEST_ARTICLES:
-            _queue.append(
-                nursery.start_soon(process_article(article_url)))
+            _queue.append(nursery.start_soon(process_article(article_url)))
             raw_results, _ = await asyncio.wait(_queue)
 
     for raw_result in raw_results:

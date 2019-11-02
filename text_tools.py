@@ -25,7 +25,8 @@ def split_by_words(morph, text):
             normalized_word = morph.parse(cleaned_word)[0].normal_form
             if len(normalized_word) > 2 or normalized_word == 'не':
                 words.append(normalized_word)
-    return [word for word in words if not has_latin_letters(word)]
+    splitted = [word for word in words if not has_latin_letters(word)]
+    return [word for word in splitted if word]
 
 
 def calculate_jaundice_rate(article_words, charged_words):
