@@ -1,12 +1,12 @@
 import pymorphy2
+import pytest
 import unittest
-import sys
-sys.path.append('..')
 from text_tools import split_by_words
 from text_tools import calculate_jaundice_rate
 from text_tools import has_latin_letters
 
 
+@pytest.mark.text_tools
 class TestTextTools(unittest.TestCase):
     def test_has_latin_letters(self):
         case = tuple(map(has_latin_letters, ('string', 'stringЮЮ', 'Проверка1')))

@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import requests
 import sys
 sys.path.append('..')
@@ -6,6 +7,7 @@ from adapters.inosmi_ru import sanitize
 from adapters.exceptions import ArticleNotFound
 
 
+@pytest.mark.adapters_inosmi_ru
 class TestInosmiRu(unittest.TestCase):
     def test_sanitize(self):
         link = 'https://inosmi.ru/economic/20190629/245384784.html'

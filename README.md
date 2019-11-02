@@ -12,13 +12,13 @@
 
 Первым шагом установите пакеты:
 
-```python3
+```
 pip install -r requirements.txt
 ```
 
 # Как запустить
 
-```python3
+```
 python main.py
 ```
 
@@ -27,12 +27,19 @@ python main.py
 Для тестирования используется [pytest](https://docs.pytest.org/en/latest/), тестами покрыты фрагменты кода сложные в отладке: text_tools.py и адаптеры. Команды для запуска тестов:
 
 ```
-python -m pytest adapters/inosmi_ru.py
+python -m pytest -m adapters_inosmi_ru
 ```
 
 ```
-python -m pytest text_tools.py
+python -m pytest -m text_tools
 ```
+
+Запуск всех тестов -
+
+```
+python -m pytest
+```
+
 
 # Цели проекта
 
