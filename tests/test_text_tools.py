@@ -9,7 +9,7 @@ from text_tools import has_latin_letters
 @pytest.mark.text_tools
 class TestTextTools(unittest.TestCase):
     def test_has_latin_letters(self):
-        case = tuple(map(has_latin_letters, ('string', 'stringЮЮ', 'Проверка1')))
+        case = tuple(map(has_latin_letters, ('string', 'stringЮ', 'Проверка1')))
         self.assertTupleEqual(case, (True, True, False))
 
     def test_split_by_words(self):
@@ -29,5 +29,3 @@ class TestTextTools(unittest.TestCase):
         self.assertTrue(-0.01 < calculate_jaundice_rate([], []) < 0.01)
         self.assertTrue(33.0 < calculate_jaundice_rate(
             ['все', 'аутсайдер', 'побег'],['аутсайдер', 'банкротство']) < 34.0)
-
-

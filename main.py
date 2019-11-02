@@ -22,13 +22,31 @@ def get_morth_raw(_html):
     return clean_text
 
 
-async def main():
+dictionary_words = ['разрушение', 'бомба', 'пожар', 'погибший', 'глобальный',
+                 'ресурс', 'выступать', 'ошибка', 'угроза', 'противопоставлять',
+                 'предостережение']
+
+
+async def get_article_text():
     async with aiohttp.ClientSession() as session:
-        html = await fetch(session, 'https://inosmi.ru/economic/20191101/246146220.html')
-        clean_text = get_morth_raw(html)
-        morph = pymorphy2.MorphAnalyzer()
-        spl = split_by_words(morph, clean_text)
-        print(spl)
+        html = await fetch(session,
+                           'https://inosmi.ru/economic/20191101/246146220.html')
+        return get_morth_raw(html)
+
+
+async def process_article():
+    clean_text = await get_article_text()
+    morph = pymorphy2.MorphAnalyzer()
+    article_words = split_by_words(morph, clean_text)
+
+    print(article_words)
+    jaundice_rate = calculate_jaundice_rate(article_words, dictionary_words)
+    print(f'Рейтинг: {jaundice_rate}\nСлов в статье: {len(article_words)}')
+
+
+
+async def main():
+    await process_article()
 
 
 if __name__ == '__main__':
