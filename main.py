@@ -73,12 +73,12 @@ async def get_charged_words(folder_name):
 
 
 async def main():
-    _queue = list()
+    parallel_tasks = list()
 
     async with create_handy_nursery() as nursery:
         for article_url in TEST_ARTICLES:
-            _queue.append(nursery.start_soon(process_article(article_url)))
-            raw_results, _ = await asyncio.wait(_queue)
+            parallel_tasks.append(nursery.start_soon(process_article(article_url)))
+            raw_results, _ = await asyncio.wait(parallel_tasks)
 
     for raw_result in raw_results:
         status, text_header, jaundice_rate, len_article_words = raw_result.result()

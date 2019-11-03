@@ -2,9 +2,9 @@ import unittest
 import pytest
 import requests
 from adapters import SANITIZERS
-from adapters import ArticleNotFound, HeaderNotFound
 
-sanitize_article_text, sanitize_article_header = SANITIZERS["inosmi_ru"]
+sanitize_article_text, sanitize_article_header, \
+ArticleNotFound, HeaderNotFound = SANITIZERS["inosmi_ru"]
 
 link = 'https://inosmi.ru/economic/20190629/245384784.html'
 
@@ -44,12 +44,12 @@ class TestInosmiRu(unittest.TestCase):
 
     def test_wrong_url(self):
         resp = requests.get('http://example.com')
+        resp.raise_for_status()
         with self.assertRaises(ArticleNotFound):
-            resp.raise_for_status()
             sanitize_article_text(resp.text)
 
     def test_should_be_header_on_page(self):
         resp = requests.get('https://raw.githubusercontent.com/psf/requests/master/requests/api.py')
+        resp.raise_for_status()
         with self.assertRaises(HeaderNotFound):
-            resp.raise_for_status()
             sanitize_article_header(resp)
