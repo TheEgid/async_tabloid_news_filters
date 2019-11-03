@@ -55,7 +55,7 @@ async def get_charged_words(folder_name):
     words = list()
     for file in files:
         if file.endswith('txt'):
-            _filepath = f'{folder_name}\\{file}'
+            _filepath = f'{folder_name}/{file}'
             async with aiofiles.open(_filepath, mode='r', encoding='utf8') as f:
                 words.append([line.strip() for line in await f.readlines()])
     return list(chain.from_iterable(words))
