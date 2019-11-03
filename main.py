@@ -5,13 +5,15 @@ import aiohttp
 import asyncio
 import pymorphy2
 import aiofiles
-
-
+from aiohttp.client_exceptions import ClientConnectorError
+from helpers import ProcessingStatus
 from helpers import create_handy_nursery
 from text_tools import split_by_words
 from text_tools import calculate_jaundice_rate
 from adapters import SANITIZERS
 
+sanitize_article_text, sanitize_article_header, \
+ArticleNotFound, HeaderNotFound = SANITIZERS["inosmi_ru"]
 
 TEST_ARTICLES = [
     'https://inosmi.ru/economic/20191101/246146220.html',
@@ -19,6 +21,8 @@ TEST_ARTICLES = [
     'https://inosmi.ru/politic/20191101/246151423.html',
     'https://inosmi.ru/politic/20191101/246150929.html',
     'https://inosmi.ru/economic/20190629/245384784.html',
+    'https://9__9.com',
+    'https://plantarum.livejournal.com/473023.html',
 ]
 
 
@@ -29,25 +33,32 @@ async def fetch(session, url):
 
 
 def get_clean_data(_html):
-    sanitize_article_text, sanitize_article_header = SANITIZERS["inosmi_ru"]
     clean_text_header = sanitize_article_header(_html)
     clean_text = sanitize_article_text(_html)
     return clean_text_header, clean_text
 
 
-async def get_article_text(article_url):
+async def get_article_text_by_url(article_url):
     async with aiohttp.ClientSession() as session:
-        html = await fetch(session, article_url)
-        return get_clean_data(html)
+        return await fetch(session, article_url)
 
 
 async def process_article(article_url):
-    clean_header, clean_text = await get_article_text(article_url)
-    morph = pymorphy2.MorphAnalyzer()
-    article_words = split_by_words(morph, clean_text)
-    charged_words = await get_charged_words('charged_dict')
-    jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
-    return clean_header, jaundice_rate, len(article_words)
+    clean_text_header = jaundice_rate = len_article_words = None
+    try:
+        status = ProcessingStatus.OK
+        html_content = await get_article_text_by_url(article_url)
+        clean_text_header, clean_text = get_clean_data(html_content)
+        morph = pymorphy2.MorphAnalyzer()
+        article_words = split_by_words(morph, clean_text)
+        charged_words = await get_charged_words('charged_dict')
+        jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
+        len_article_words = len(article_words)
+    except ClientConnectorError:
+        status = ProcessingStatus.FETCH_ERROR
+    except (ArticleNotFound, HeaderNotFound):
+        status = ProcessingStatus.PARSING_ERROR
+    return status, clean_text_header, jaundice_rate, len_article_words
 
 
 async def get_charged_words(folder_name):
@@ -70,10 +81,11 @@ async def main():
             raw_results, _ = await asyncio.wait(_queue)
 
     for raw_result in raw_results:
-        clean_text_header, jaundice_rate, article_words = raw_result.result()
-        print(f'\nЗаголовок: {clean_text_header}\n'
+        status, text_header, jaundice_rate, len_article_words = raw_result.result()
+        print(f'\nЗаголовок: {text_header}\n'
+              f'Статус: {status.value}\n'
               f'Рейтинг: {jaundice_rate}\n'
-              f'Слов в статье: {article_words}\n')
+              f'Слов в статье: {len_article_words}\n')
 
 
 if __name__ == '__main__':

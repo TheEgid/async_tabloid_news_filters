@@ -7,7 +7,7 @@ def sanitize_article_header(html):
     try:
         soup = BeautifulSoup(html, 'html.parser')
         header = soup.find('h1', {'class': 'article-header__title'}).text
-    except (AttributeError,TypeError):
+    except (AttributeError, TypeError):
         raise HeaderNotFound()
     return header
 
