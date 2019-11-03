@@ -1,9 +1,11 @@
+import os
+import sys
+from itertools import chain
 import aiohttp
 import asyncio
 import pymorphy2
 import aiofiles
-import os
-import sys
+
 
 from helpers import create_handy_nursery
 from text_tools import split_by_words
@@ -43,14 +45,20 @@ async def process_article(article_url):
     clean_header, clean_text = await get_article_text(article_url)
     morph = pymorphy2.MorphAnalyzer()
     article_words = split_by_words(morph, clean_text)
-    negative_words = await handle_index_page(r'charged_dict/negative_words.txt')
-    jaundice_rate = calculate_jaundice_rate(article_words, negative_words)
+    charged_words = await get_charged_words('charged_dict')
+    jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
     return clean_header, jaundice_rate, len(article_words)
 
 
-async def handle_index_page(filepath):
-    async with aiofiles.open(filepath, mode='r', encoding='utf8') as f:
-        return [line.strip() for line in await f.readlines()]
+async def get_charged_words(folder_name):
+    files = os.listdir('./' + folder_name)
+    words = list()
+    for file in files:
+        if file.endswith('txt'):
+            _filepath = f'{folder_name}\\{file}'
+            async with aiofiles.open(_filepath, mode='r', encoding='utf8') as f:
+                words.append([line.strip() for line in await f.readlines()])
+    return list(chain.from_iterable(words))
 
 
 async def main():
