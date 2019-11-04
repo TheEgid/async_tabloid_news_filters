@@ -17,7 +17,6 @@ from text_tools import split_by_words
 sanitize_article_text, sanitize_article_header, \
 ArticleNotFound, HeaderNotFound = SANITIZERS["inosmi_ru"]
 
-TIMEOUT = 3
 
 TEST_ARTICLES = [
     'https://inosmi.ru/economic/20191101/246146220.html',
