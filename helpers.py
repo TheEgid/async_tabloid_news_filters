@@ -1,6 +1,10 @@
-import aionursery
+import asyncio
 import contextlib
+import logging
+import time
 from enum import Enum
+
+import aionursery
 
 
 class ProcessingStatus(Enum):
@@ -19,3 +23,18 @@ async def create_handy_nursery():
         if len(e.exceptions) == 1:
             raise e.exceptions[0]
         raise
+
+
+@contextlib.asynccontextmanager
+async def execution_timer():
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(
+        logging.ERROR)
+    _timeout = 3
+    async with create_handy_nursery() as nursery:
+        start = time.monotonic()
+        yield nursery
+        end = time.monotonic() - start
+        if end > _timeout:
+            raise asyncio.TimeoutError
+        logging.info('Анализ закончен за {:.2f} сек'.format(end))

@@ -1,19 +1,23 @@
+import asyncio
 import os
 import sys
-from itertools import chain
-import aiohttp
-import asyncio
-import pymorphy2
+
 import aiofiles
+import aiohttp
+import pymorphy2
+from adapters import SANITIZERS
 from aiohttp.client_exceptions import ClientConnectorError
+from async_timeout import timeout
 from helpers import ProcessingStatus
 from helpers import create_handy_nursery
-from text_tools import split_by_words
+from helpers import execution_timer
 from text_tools import calculate_jaundice_rate
-from adapters import SANITIZERS
+from text_tools import split_by_words
 
 sanitize_article_text, sanitize_article_header, \
 ArticleNotFound, HeaderNotFound = SANITIZERS["inosmi_ru"]
+
+TIMEOUT = 3
 
 TEST_ARTICLES = [
     'https://inosmi.ru/economic/20191101/246146220.html',
@@ -23,6 +27,7 @@ TEST_ARTICLES = [
     'https://inosmi.ru/economic/20190629/245384784.html',
     'https://9__9.com',
     'https://plantarum.livejournal.com/473023.html',
+    'https://dvmn.org/filer/canonical/1561832205/162/'
 ]
 
 
@@ -39,8 +44,10 @@ def get_clean_data(_html):
 
 
 async def get_article_text_by_url(article_url):
-    async with aiohttp.ClientSession() as session:
-        return await fetch(session, article_url)
+    _timeout = 3
+    async with timeout(_timeout):
+        async with aiohttp.ClientSession() as session:
+            return await fetch(session, article_url)
 
 
 async def process_article(article_url):
@@ -50,7 +57,8 @@ async def process_article(article_url):
         html_content = await get_article_text_by_url(article_url)
         clean_text_header, clean_text = get_clean_data(html_content)
         morph = pymorphy2.MorphAnalyzer()
-        article_words = split_by_words(morph, clean_text)
+        async with execution_timer():
+            article_words = await split_by_words(morph, clean_text)
         charged_words = await get_charged_words('charged_dict')
         jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
         len_article_words = len(article_words)
@@ -58,6 +66,8 @@ async def process_article(article_url):
         status = ProcessingStatus.FETCH_ERROR
     except (ArticleNotFound, HeaderNotFound):
         status = ProcessingStatus.PARSING_ERROR
+    except (TimeoutError, asyncio.TimeoutError):
+        status = ProcessingStatus.TIMEOUT
     return status, clean_text_header, jaundice_rate, len_article_words
 
 
@@ -68,13 +78,12 @@ async def get_charged_words(folder_name):
         if file.endswith('txt'):
             _filepath = f'{folder_name}/{file}'
             async with aiofiles.open(_filepath, mode='r', encoding='utf8') as f:
-                words.append([line.strip() for line in await f.readlines()])
-    return list(chain.from_iterable(words))
+                words.extend([line.strip() for line in await f.readlines()])
+    return words
 
 
 async def main():
     parallel_tasks = list()
-
     async with create_handy_nursery() as nursery:
         for article_url in TEST_ARTICLES:
             parallel_tasks.append(nursery.start_soon(process_article(article_url)))
