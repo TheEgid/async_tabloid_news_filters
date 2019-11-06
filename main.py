@@ -1,11 +1,12 @@
 import asyncio
+import logging
 import os
-import sys
 
 import aiofiles
 import aiohttp
 import pymorphy2
 from adapters import SANITIZERS
+from aiohttp import web
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from helpers import ProcessingStatus
@@ -49,16 +50,14 @@ async def get_article_text_by_url(article_url):
             return await fetch(session, article_url)
 
 
-async def process_article(article_url):
+async def process_article(article_url, charged_words, morph):
     clean_text_header = jaundice_rate = len_article_words = None
     try:
         status = ProcessingStatus.OK
         html_content = await get_article_text_by_url(article_url)
         clean_text_header, clean_text = get_clean_data(html_content)
-        morph = pymorphy2.MorphAnalyzer()
         async with execution_timer():
             article_words = await split_by_words(morph, clean_text)
-        charged_words = await get_charged_words('charged_dict')
         jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
         len_article_words = len(article_words)
     except ClientConnectorError:
@@ -81,23 +80,70 @@ async def get_charged_words(folder_name):
     return words
 
 
-async def main():
+async def start_process_article(article_url, charged_words, morph):
     parallel_tasks = list()
     async with create_handy_nursery() as nursery:
-        for article_url in TEST_ARTICLES:
-            parallel_tasks.append(nursery.start_soon(process_article(article_url)))
-            raw_results, _ = await asyncio.wait(parallel_tasks)
+        parallel_tasks.append(nursery.start_soon(process_article(
+            article_url, charged_words, morph)))
+        raw_results, _ = await asyncio.wait(parallel_tasks)
+        return [raw_result.result() for raw_result in raw_results]
 
-    for raw_result in raw_results:
-        status, text_header, jaundice_rate, len_article_words = raw_result.result()
-        print(f'\nЗаголовок: {text_header}\n'
-              f'Статус: {status.value}\n'
-              f'Рейтинг: {jaundice_rate}\n'
-              f'Слов в статье: {len_article_words}\n')
+
+async def handler(article_url, charged_words, morph):
+    result = await start_process_article(article_url, charged_words, morph)
+    status, text_header, jaundice_rate, len_article_words = result[0]
+    logging.info(f'Заголовок: {text_header} Статус: {status.value} '
+                 f'Рейтинг: {jaundice_rate} Слов в статье: {len_article_words}')
+    return {
+        "status": status.value,
+        "url": article_url,
+        "score": jaundice_rate,
+        "words_count": len_article_words,
+    }
+
+
+async def get_handler(request):
+    charged_words = await get_charged_words('charged_dict')
+    morph = pymorphy2.MorphAnalyzer()
+    rez_list = list()
+    key = 'urls'
+    params = request.query[key]
+    values = params.split(',')
+    for article_url in values:
+        rez = await handler(article_url, charged_words, morph)
+        rez_list.append(rez)
+    return web.json_response(rez_list)
+
+
+def run_server(host="127.0.0.1", port=80):
+    app = web.Application()
+    app.add_routes([web.get('/', get_handler)])
+    web.run_app(app=app, host=host, port=port)
+
+#
+# async def main():
+#
+#     for article_url in TEST_ARTICLES:
+#         r = await handler(article_url)
+#         print(r)
+
 
 
 if __name__ == '__main__':
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    sys.path.insert(0, os.path.split(dir_path)[0])
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(
+        logging.ERROR)
+
+    run_server()
+
+#http://127.0.0.1/?urls=https://inosmi.ru/economic/20190629/245384784.html,https://inosmi.ru/economic/20191101/246146220.html,https://9__9.com%27
+
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main())
+
+
+
+
+
+
+

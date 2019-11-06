@@ -27,9 +27,6 @@ async def create_handy_nursery():
 
 @contextlib.asynccontextmanager
 async def execution_timer():
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(
-        logging.ERROR)
     _timeout = 3
     async with create_handy_nursery() as nursery:
         start = time.monotonic()
