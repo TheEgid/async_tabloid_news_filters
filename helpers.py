@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import logging
+import os
 import time
 from enum import Enum
 
@@ -35,3 +36,14 @@ async def execution_timer():
         if end > _timeout:
             raise asyncio.TimeoutError
         logging.info('Анализ закончен за {:.2f} сек'.format(end))
+
+
+def get_charged_words(folder_name):
+    files = os.listdir('./' + folder_name)
+    words = list()
+    for file in files:
+        if file.endswith('txt'):
+            _filepath = f'{folder_name}/{file}'
+            with open(_filepath, encoding='utf8') as f:
+                words.extend([line.strip() for line in f.readlines()])
+    return words

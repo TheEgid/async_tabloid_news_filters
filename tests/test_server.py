@@ -1,6 +1,7 @@
-import pytest
-from aiohttp import web
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from aiohttp.test_utils import AioHTTPTestCase
+from main import run_server
+
+# https://aiohttp.readthedocs.io/en/stable/testing.html
 
 TEST_ARTICLES = [
     'https://inosmi.ru/economic/20191101/246146220.html',
@@ -14,58 +15,49 @@ TEST_ARTICLES = [
 ]
 
 
-@pytest.fixture
-def link():
-    yield 'http://selenium1py.pythonanywhere.com/'
-
 
 class MyAppTestCase(AioHTTPTestCase):
 
     async def get_application(self):
-        async def get_handler(request):
-            key = 'urls'
-            params = request.query[key]
-            values = params.split(',')
-            return web.json_response({key: values})
-        app = web.Application()
-        app.router.add_get('/', get_handler)
-        return app
+        # async def get_handler(request):
+        #     key = 'urls'
+        #     params = request.query[key]
+        #     values = params.split(',')
+        #     return web.json_response({key: values})
+            # charged_words = get_charged_words('../charged_dict')
+            # morph = pymorphy2.MorphAnalyzer()
+            # handler = partial(get_handler, charged_words, morph)
+            # app = web.Application()
+            # app.router.add_get('/', handler)
+        return run_server()
 
-    @pytest.mark.parametrize('link')
-    @unittest_run_loop
-    async def test_example(self, link):
-        resp = await self.client.request("GET", link)
-        assert resp.status == 200
-        result = await resp.json()
-        print(result)
-        self.assertDictEqual(
-            {'urls':
-                 ['https://ya.ru', 'https://google.com']
-             },
-            result)
+    # async def tearDown(self):
+    #     await self.app.shutdown()
+        # Run loop until tasks done:
+        #loop.run_until_complete(asyncio.gather(*pending))
+
+    #@unittest_run_loop
+    async def test_example_vanilla(self):
+        async def test_get_route():
+            link = r'?urls=https://ya.ru,https://google.com'
+            # async with aionursery.Nursery() as nursery:
+            #     resp = await nursery.start_soon(self.client.request("GET", link))
+            #     #await asyncio.sleep(0)
+            resp = await self.client.request("GET", link)
+            assert resp.status == 200
+            # print(type(resp))
+            # result = await resp.json()
+            # print(result)
+
+        #await asyncio.run(test_get_route())
+        self.loop.run_until_complete(test_get_route())
 
 
-#
-# class MyAppTestCase(AioHTTPTestCase):
-#
-#     async def get_application(self):
-#         async def get_handler(request):
-#             key = 'urls'
-#             params = request.query[key]
-#             values = params.split(',')
-#             return web.json_response({key: values})
-#         app = web.Application()
-#         app.router.add_get('/', get_handler)
-#         return app
-#
-#     @unittest_run_loop
-#     async def test_example(self):
-#         resp = await self.client.request("GET", "?urls=https://ya.ru,https://google.com")
-#         assert resp.status == 200
-#         result = await resp.json()
-#         print(result)
-#         self.assertDictEqual(
-#             {'urls':
-#                  ['https://ya.ru', 'https://google.com']
-#              },
-#             result)
+
+
+        # self.assertDictEqual(
+        #     {'urls':
+        #          ['https://ya.ru', 'https://google.com']
+        #      },
+        #     result)
+        #self.loop.run_until_complete(test_get_route())
