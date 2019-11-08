@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import contextlib
 import logging
@@ -47,3 +48,11 @@ def get_charged_words(folder_name):
             with open(_filepath, encoding='utf8') as f:
                 words.extend([line.strip() for line in f.readlines()])
     return words
+
+
+def get_args_parser():
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=formatter_class)
+    parser.add_argument('-p', '--port', type=int,
+                        default=80, help='connection port')
+    return parser

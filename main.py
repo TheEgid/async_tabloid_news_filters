@@ -11,6 +11,7 @@ from async_timeout import timeout
 from helpers import ProcessingStatus
 from helpers import create_handy_nursery
 from helpers import execution_timer
+from helpers import get_args_parser
 from helpers import get_charged_words
 from text_tools import calculate_jaundice_rate
 from text_tools import split_by_words
@@ -96,7 +97,7 @@ async def get_handler(charged_words, morph, request):
         return web.json_response(data={'error': 'no urls'}, status=400)
 
 
-def run_server(host="127.0.0.1", port=80):
+def run_server(host='0.0.0.0', port=80):
     charged_words = get_charged_words('charged_dict')
     morph = pymorphy2.MorphAnalyzer()
     handler = partial(get_handler, charged_words, morph)
@@ -108,6 +109,8 @@ def run_server(host="127.0.0.1", port=80):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(logging.ERROR)
-    run_server()
+    parser = get_args_parser()
+    args = parser.parse_args()
+    run_server(port=args.port)
 
 # http://127.0.0.1/?urls=https://inosmi.ru/economic/20190629/245384784.html,https://inosmi.ru/economic/20191101/246146220.html,https://9__9.com%27

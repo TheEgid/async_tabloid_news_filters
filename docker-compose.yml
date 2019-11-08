@@ -1,0 +1,35 @@
+version: '3.1'
+
+#reverse-proxy
+#https://dev.to/ishankhare07/nginx-as-reverse-proxy-for-a-flask-app-using-docker-3ajg
+services:
+    nginx:
+        image: nginx:1.13
+        container_name: nginx
+        depends_on:
+            - web
+        volumes:
+            - ./nginx_config/conf.d:/etc/nginx/conf.d
+        networks:
+            - my-network
+        ports:
+            - 80:80
+    web:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        container_name: web
+        volumes:
+            - ./:/code/
+        networks:
+            my-network:
+                aliases:
+                    - web-app
+        ports:
+            - 8080:5000
+
+networks:
+    my-network:
+
+
+
