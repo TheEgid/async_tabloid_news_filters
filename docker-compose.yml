@@ -20,7 +20,7 @@ services:
             dockerfile: Dockerfile
         container_name: web
         volumes:
-            - ./:/code/
+            - ./:/opt
         networks:
             my-network:
                 aliases:

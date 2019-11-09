@@ -1,31 +1,25 @@
 import asyncio
 import logging
 from functools import partial
+
 import aiohttp
 import pymorphy2
-
+from adapters.inosmi_ru import ArticleNotFoundError
+from adapters.inosmi_ru import HeaderNotFoundError
+from adapters.inosmi_ru import sanitize_article_header
+from adapters.inosmi_ru import sanitize_article_text
 from aiohttp import web
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-
 from tools.helpers import ProcessingStatus
+from tools.helpers import UrlsLimitError
 from tools.helpers import create_handy_nursery
 from tools.helpers import execution_timer
+from tools.helpers import fetch
 from tools.helpers import get_args_parser
 from tools.helpers import get_charged_words
 from tools.text_tools import calculate_jaundice_rate
 from tools.text_tools import split_by_words
-
-from adapters.inosmi_ru import sanitize_article_text
-from adapters.inosmi_ru import sanitize_article_header
-from adapters.inosmi_ru import ArticleNotFound
-from adapters.inosmi_ru import HeaderNotFound
-
-
-async def fetch(session, url):
-    async with session.get(url) as response:
-        response.raise_for_status()
-        return await response.text()
 
 
 def get_clean_data(_html):
@@ -53,7 +47,7 @@ async def process_article(article_url, charged_words, morph):
         len_article_words = len(article_words)
     except ClientConnectorError:
         status = ProcessingStatus.FETCH_ERROR
-    except (ArticleNotFound, HeaderNotFound):
+    except (ArticleNotFoundError, HeaderNotFoundError):
         status = ProcessingStatus.PARSING_ERROR
     except (TimeoutError, asyncio.TimeoutError):
         status = ProcessingStatus.TIMEOUT
@@ -90,13 +84,23 @@ async def get_handler(charged_words, morph, request):
     try:
         _article_urls = request.query['urls']
         article_urls = _article_urls.split(',')
+        if len(article_urls) > 10:
+            raise UrlsLimitError
+
         async with create_handy_nursery() as nursery:
             rez_data = await nursery.start_soon(
                 handler_helper(article_urls, charged_words, morph))
         return web.json_response(rez_data)
-#{"error": "too many urls in request, should be 10 or less"}
+
     except KeyError:
-        return web.json_response(data={'error': 'no urls'}, status=400)
+        return web.json_response(data={
+            'error': 'no urls'},
+            status=400)
+
+    except UrlsLimitError:
+        return web.json_response(data={
+            'error': 'too many urls in request, should be 10 or less'},
+            status=400)
 
 
 def run_server(host='0.0.0.0', port=80):

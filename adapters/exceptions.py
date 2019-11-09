@@ -1,6 +1,6 @@
-class ArticleNotFound(Exception):
+class ArticleNotFoundError(Exception):
     pass
 
 
-class HeaderNotFound(Exception):
+class HeaderNotFoundError(Exception):
     pass

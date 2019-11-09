@@ -1,4 +1,11 @@
+import asyncio
+import contextlib
+import unittest
 
+import aionursery
+import asynctest
+from aiohttp import web
+from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 from main import run_server
 
 # https://aiohttp.readthedocs.io/en/stable/testing.html
@@ -15,13 +22,7 @@ TEST_ARTICLES = [
     'https://dvmn.org/filer/canonical/1561832205/162/'
 ]
 
-import aionursery
-import asyncio
-import asynctest
-import contextlib
-import unittest
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
-from aiohttp import web
+
 
 
 @contextlib.asynccontextmanager

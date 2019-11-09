@@ -9,11 +9,21 @@ from enum import Enum
 import aionursery
 
 
+class UrlsLimitError(Exception):
+    pass
+
+
 class ProcessingStatus(Enum):
     OK = 'OK'
     FETCH_ERROR = 'FETCH_ERROR'
     PARSING_ERROR = 'PARSING_ERROR'
     TIMEOUT = 'TIMEOUT'
+
+
+async def fetch(session, url):
+    async with session.get(url) as response:
+        response.raise_for_status()
+        return await response.text()
 
 
 @contextlib.asynccontextmanager

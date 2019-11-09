@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
-from .exceptions import ArticleNotFound, HeaderNotFound
+
+from .exceptions import ArticleNotFoundError, HeaderNotFoundError
 from .html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
 
 
@@ -8,7 +9,7 @@ def sanitize_article_header(html):
         soup = BeautifulSoup(html, 'html.parser')
         header = soup.find('h1', {'class': 'article-header__title'}).text
     except (AttributeError, TypeError):
-        raise HeaderNotFound()
+        raise HeaderNotFoundError()
     return header
 
 
@@ -17,7 +18,7 @@ def sanitize_article_text(html, plaintext=False):
     articles = soup.select("article.article")
 
     if len(articles) != 1:
-        raise ArticleNotFound()
+        raise ArticleNotFoundError()
 
     article = articles[0]
     article.attrs = {}

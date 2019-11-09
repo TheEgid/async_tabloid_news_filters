@@ -4,9 +4,10 @@ import aionursery
 import asynctest
 import pymorphy2
 import pytest
-from text_tools import calculate_jaundice_rate
-from text_tools import has_latin_letters
-from text_tools import split_by_words
+
+from .tools.text_tools import calculate_jaundice_rate
+from ..tools.text_tools import has_latin_letters
+from ..tools.text_tools import split_by_words
 
 
 @pytest.mark.text_tools
