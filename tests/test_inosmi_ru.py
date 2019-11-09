@@ -4,7 +4,7 @@ import unittest
 import pytest
 import requests
 
-sys.path.append('../adapters')
+sys.path.append('./adapters')
 from inosmi_ru import ArticleNotFoundError
 from inosmi_ru import HeaderNotFoundError
 from inosmi_ru import sanitize_article_header

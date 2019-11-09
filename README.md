@@ -69,39 +69,41 @@ python main.py
 
 Для тестирования используется [pytest](https://docs.pytest.org/en/latest/), тесты созданы для основного функционала и фрагментов кода сложного в отладке: text_tools.py и адаптеры. 
 
-Запуск основного теста -
+**Запуск всех тестов -**
+
+```
+python -m pytest
+
+```
+Docker
+```
+make test
+```
+
+**Запуск основного теста -**
 
 ```
 python -m pytest -m server
-
-~~**``Docker``**~~
-
+```
+Docker
+```
 make test_server
 ```
 
-Запуск отдельных тестов -
+**Запуск отдельных тестов -**
 
 ```
 python -m pytest -m adapters_inosmi_ru
 
 python -m pytest -m text_tools
-
-~~**``Docker``**~~
-
+```
+Docker
+```
 make test_adapters
 
 make test_tools
 ```
 
-Запуск всех тестов -
-
-```
-python -m pytest
-
-~~**``Docker``**~~
-
-make test
-```
 
 
 # Цели проекта
