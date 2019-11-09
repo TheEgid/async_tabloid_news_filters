@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
-
-from .exceptions import ArticleNotFoundError, HeaderNotFoundError
-from .html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
+from exceptions import ArticleNotFoundError, HeaderNotFoundError
+from html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
 
 
 def sanitize_article_header(html):
@@ -35,9 +34,11 @@ def sanitize_article_text(html, plaintext=False):
     remove_buzz_tags(article)
 
     if not plaintext:
-        article_text = article.prettify()
+        text = article.prettify()
     else:
         remove_all_tags(article)
-        article_text = article.get_text()
+        text = article.get_text()
 
-    return article_text.strip()
+    text = text.strip()
+    text = text.replace(u'\xa0', u' ')
+    return text

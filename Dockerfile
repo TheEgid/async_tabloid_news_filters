@@ -14,6 +14,6 @@ RUN pip install -r requirements.txt
 
 COPY . /opt
 
-EXPOSE 80 5000
+EXPOSE 80
 
 CMD ["python3", "main.py", "--port", "5000"]

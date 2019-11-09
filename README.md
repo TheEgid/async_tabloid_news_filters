@@ -11,16 +11,23 @@
 
 Приложение будет установлено с доступом через "обратный прокси" Nginx.
 
-режим вывода логов -
+установка -
 
 ```
-sudo docker-compose up --build
-
+make build
 ```
+
 режим "демона" -
 
 ```
-sudo docker-compose up --build -d
+make run
+```
+
+режим вывода логов -
+
+```
+make run_logs
+
 ```
 
 ### Как установить без Docker
@@ -68,21 +75,34 @@ python main.py
 ```
 python -m pytest -m server
 ```
+Docker
+```
+make test_server
+```
 
 Запуск отдельных тестов -
 
 ```
 python -m pytest -m adapters_inosmi_ru
+
+python -m pytest -m text_tools
 ```
 
+Docker
 ```
-python -m pytest -m text_tools
+make test_adapters
+
+make test_tools
 ```
 
 Запуск всех тестов -
 
 ```
 python -m pytest
+```
+Docker
+```
+make test
 ```
 
 

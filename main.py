@@ -1,25 +1,29 @@
 import asyncio
 import logging
+import sys
 from functools import partial
 
-import aiohttp
 import pymorphy2
-from adapters.inosmi_ru import ArticleNotFoundError
-from adapters.inosmi_ru import HeaderNotFoundError
-from adapters.inosmi_ru import sanitize_article_header
-from adapters.inosmi_ru import sanitize_article_text
-from aiohttp import web
+from aiohttp import ClientSession, web
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from tools.helpers import ProcessingStatus
-from tools.helpers import UrlsLimitError
-from tools.helpers import create_handy_nursery
-from tools.helpers import execution_timer
-from tools.helpers import fetch
-from tools.helpers import get_args_parser
-from tools.helpers import get_charged_words
-from tools.text_tools import calculate_jaundice_rate
-from tools.text_tools import split_by_words
+
+sys.path.extend(['./tools', './adapters'])
+
+from inosmi_ru import ArticleNotFoundError
+from inosmi_ru import HeaderNotFoundError
+from inosmi_ru import sanitize_article_header
+from inosmi_ru import sanitize_article_text
+
+from helpers import ProcessingStatus
+from helpers import UrlsLimitError
+from helpers import create_handy_nursery
+from helpers import execution_timer
+from helpers import fetch
+from helpers import get_args_parser
+from helpers import get_charged_words
+from text_tools import calculate_jaundice_rate
+from text_tools import split_by_words
 
 
 def get_clean_data(_html):
@@ -31,7 +35,7 @@ def get_clean_data(_html):
 async def get_article_text_by_url(article_url):
     _timeout = 3
     async with timeout(_timeout):
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             return await fetch(session, article_url)
 
 
@@ -115,8 +119,7 @@ def run_server(host='0.0.0.0', port=80):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(logging.ERROR)
-    parser = get_args_parser()
-    args = parser.parse_args()
+    args = get_args_parser().parse_args()
     run_server(port=args.port)
 
 # http://127.0.0.1/?urls=https://inosmi.ru/economic/20190629/245384784.html,https://inosmi.ru/economic/20191101/246146220.html,https://9__9.com%27

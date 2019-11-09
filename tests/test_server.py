@@ -1,11 +1,15 @@
 import asyncio
-import contextlib
+import sys
 import unittest
 
-import aionursery
 import asynctest
+import pytest
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+
+sys.path.extend(['./tools', './adapters', '.', '..'])
+
+from helpers import create_handy_nursery
 from main import run_server
 
 # https://aiohttp.readthedocs.io/en/stable/testing.html
@@ -24,24 +28,13 @@ TEST_ARTICLES = [
 
 
 
-
-@contextlib.asynccontextmanager
-async def create_handy_nursery():
-    try:
-        async with aionursery.Nursery() as nursery:
-            yield nursery
-    except aionursery.MultiError as e:
-        if len(e.exceptions) == 1:
-            raise e.exceptions[0]
-        raise
-
-
 async def say(what, when):
     await asyncio.sleep(when)
     print(what)
     return what
 
 
+@pytest.mark.server
 class TestAsyncMain(asynctest.TestCase):
 
     async def test_say(self):
@@ -52,6 +45,7 @@ class TestAsyncMain(asynctest.TestCase):
         self.assertEqual('Privet!', case)
 
 
+@pytest.mark.server
 class MyAppTestCase(AioHTTPTestCase):
 
     async def get_application(self):
