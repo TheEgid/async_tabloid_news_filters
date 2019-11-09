@@ -1,23 +1,25 @@
 import asyncio
 import logging
 from functools import partial
-
 import aiohttp
 import pymorphy2
-from adapters import SANITIZERS
+
 from aiohttp import web
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from helpers import ProcessingStatus
-from helpers import create_handy_nursery
-from helpers import execution_timer
-from helpers import get_args_parser
-from helpers import get_charged_words
-from text_tools import calculate_jaundice_rate
-from text_tools import split_by_words
 
-sanitize_article_text, sanitize_article_header, \
-ArticleNotFound, HeaderNotFound = SANITIZERS["inosmi_ru"]
+from tools.helpers import ProcessingStatus
+from tools.helpers import create_handy_nursery
+from tools.helpers import execution_timer
+from tools.helpers import get_args_parser
+from tools.helpers import get_charged_words
+from tools.text_tools import calculate_jaundice_rate
+from tools.text_tools import split_by_words
+
+from adapters.inosmi_ru import sanitize_article_text
+from adapters.inosmi_ru import sanitize_article_header
+from adapters.inosmi_ru import ArticleNotFound
+from adapters.inosmi_ru import HeaderNotFound
 
 
 async def fetch(session, url):
@@ -92,7 +94,7 @@ async def get_handler(charged_words, morph, request):
             rez_data = await nursery.start_soon(
                 handler_helper(article_urls, charged_words, morph))
         return web.json_response(rez_data)
-
+#{"error": "too many urls in request, should be 10 or less"}
     except KeyError:
         return web.json_response(data={'error': 'no urls'}, status=400)
 

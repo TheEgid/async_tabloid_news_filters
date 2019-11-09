@@ -9,7 +9,7 @@ services:
         depends_on:
             - web
         volumes:
-            - ./nginx_config/conf.d:/etc/nginx/conf.d
+            - ./config_nginx:/etc/nginx/conf.d
         networks:
             - my-network
         ports:
