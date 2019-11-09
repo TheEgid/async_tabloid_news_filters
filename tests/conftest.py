@@ -1,7 +1,2 @@
 import sys
-sys.path.extend(['./tools', './adapters', '.', '..'])
-#
-# try:
-
-# except ModuleNotFoundError:
-#     pass
+sys.path.extend(['./tools', '../adapters', '.', '..'])

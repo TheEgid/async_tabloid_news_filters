@@ -27,7 +27,6 @@ make run
 
 ```
 make run_logs
-
 ```
 
 ### Как установить без Docker
@@ -74,9 +73,9 @@ python main.py
 
 ```
 python -m pytest -m server
-```
-Docker
-```
+
+~~**``Docker``**~~
+
 make test_server
 ```
 
@@ -86,10 +85,9 @@ make test_server
 python -m pytest -m adapters_inosmi_ru
 
 python -m pytest -m text_tools
-```
 
-Docker
-```
+~~**``Docker``**~~
+
 make test_adapters
 
 make test_tools
@@ -99,9 +97,9 @@ make test_tools
 
 ```
 python -m pytest
-```
-Docker
-```
+
+~~**``Docker``**~~
+
 make test
 ```
 
