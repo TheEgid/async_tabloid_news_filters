@@ -15,43 +15,32 @@ class UrlsLimitError(Exception):
     pass
 
 
-class RedisConnectionError(Exception):
-    pass
-
-
-class RedisCache:
-    def __init__(self, host, port):
-        self.server = redis.Redis(host=host, port=port, db=0)
-        self.values = []
-
-    def memo_set(self, lst_keys, lst_values):
-        _dict = dict(zip(lst_keys, lst_values))
-        try:
-            for _key, _value in _dict.items():
-                self.server.set(_key, pickle.dumps(_value))
-        except (TypeError, redis.exceptions.ConnectionError):
-            return None
-
-    def memo_get(self, lst_keys):
-        self.values = []
-        for _key in lst_keys:
-            try:
-                value = pickle.loads(self.server.get(_key))
-                self.values.append(value)
-            except (TypeError, redis.exceptions.ConnectionError):
-                return None
-        return self.values
-
-    def memo_delete(self, lst_keys):
-        for key in lst_keys:
-            self.server.delete(key)
-
-
 class ProcessingStatus(Enum):
     OK = 'OK'
     FETCH_ERROR = 'FETCH_ERROR'
     PARSING_ERROR = 'PARSING_ERROR'
     TIMEOUT = 'TIMEOUT'
+
+
+class RedisCache:
+    def __init__(self, host, port):
+        self.memo = redis.Redis(host=host, port=port, db=0)
+
+
+def write_to_cashe(data, cashe):
+    try:
+        if data['status'] == 'OK':
+            cashe.memo.set(data['url'], pickle.dumps(data))
+    except redis.exceptions.ConnectionError:
+        return None
+
+
+def read_from_cashe(url, cashe):
+    try:
+        data = pickle.loads(cashe.memo.get(url))
+        return data
+    except (TypeError, redis.exceptions.ConnectionError):
+        return None
 
 
 async def fetch(session, url):
