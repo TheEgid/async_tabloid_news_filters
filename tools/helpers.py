@@ -3,14 +3,48 @@ import asyncio
 import contextlib
 import logging
 import os
+import pickle
 import time
 from enum import Enum
 
 import aionursery
+import redis
 
 
 class UrlsLimitError(Exception):
     pass
+
+
+class RedisConnectionError(Exception):
+    pass
+
+
+class RedisCache:
+    def __init__(self, host, port):
+        self.server = redis.Redis(host=host, port=port, db=0)
+        self.values = []
+
+    def memo_set(self, lst_keys, lst_values):
+        _dict = dict(zip(lst_keys, lst_values))
+        try:
+            for _key, _value in _dict.items():
+                self.server.set(_key, pickle.dumps(_value))
+        except (TypeError, redis.exceptions.ConnectionError):
+            return None
+
+    def memo_get(self, lst_keys):
+        self.values = []
+        for _key in lst_keys:
+            try:
+                value = pickle.loads(self.server.get(_key))
+                self.values.append(value)
+            except (TypeError, redis.exceptions.ConnectionError):
+                return None
+        return self.values
+
+    def memo_delete(self, lst_keys):
+        for key in lst_keys:
+            self.server.delete(key)
 
 
 class ProcessingStatus(Enum):
@@ -63,6 +97,8 @@ def get_charged_words(folder_name):
 def get_args_parser():
     formatter_class = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=formatter_class)
-    parser.add_argument('-p', '--port', type=int,
-                        default=80, help='connection port')
+    parser.add_argument('-host', default='localhost')
+    parser.add_argument('-port', type=int, default=80)
+    parser.add_argument('-redis_host', default='localhost')
+    parser.add_argument('-redis_port', type=int, default=6379)
     return parser

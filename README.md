@@ -12,19 +12,14 @@
 Приложение будет установлено с доступом через "обратный прокси" Nginx.
 
 установка -
-
 ```
 make build
 ```
-
 режим "демона" -
-
 ```
 make run
 ```
-
 режим вывода логов -
-
 ```
 make run_logs
 ```
@@ -51,14 +46,11 @@ python main.py
 
 **http://{ваш_localhost}:80**
 
-
 Браузер будет принимать запросы вида:
-
 
 **http://{ваш_localhost}?urls=url_статьи**
 
 **http://{ваш_localhost}?urls=url_статьи1,url_статьи2**
-
 
 Максимум 10 статей в одной ссылке.
 
@@ -70,18 +62,14 @@ python main.py
 Для тестирования используется [pytest](https://docs.pytest.org/en/latest/), тесты созданы для основного функционала и фрагментов кода сложного в отладке: text_tools.py и адаптеры. 
 
 **Запуск всех тестов -**
-
 ```
 python -m pytest
-
 ```
 Docker
 ```
 make test
 ```
-
 **Запуск основного теста -**
-
 ```
 python -m pytest -m server
 ```
@@ -89,9 +77,7 @@ Docker
 ```
 make test_server
 ```
-
 **Запуск отдельных тестов -**
-
 ```
 python -m pytest -m adapters_inosmi_ru
 

@@ -14,6 +14,6 @@ RUN pip install -r requirements.txt
 
 COPY . /opt
 
-EXPOSE 80
+EXPOSE 80 6379
 
-CMD ["python3", "main.py", "--port", "5000"]
+CMD ["python3", "main.py", "-host", "0.0.0.0", "-port", "5000", "-redis_host", "redis", "-redis_port", "6379"]

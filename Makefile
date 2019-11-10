@@ -7,7 +7,7 @@ build:
 run:
 	docker-compose up -d
 
-run_with_logs:
+run_logs:
 	docker-compose up
 
 test:
