@@ -1,15 +1,6 @@
 from bs4 import BeautifulSoup
-from exceptions import ArticleNotFoundError, HeaderNotFoundError
+from exceptions import ArticleNotFoundError
 from html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
-
-
-def sanitize_article_header(html):
-    try:
-        soup = BeautifulSoup(html, 'html.parser')
-        header = soup.find('h1', {'class': 'article-header__title'}).text
-    except (AttributeError, TypeError):
-        raise HeaderNotFoundError()
-    return header
 
 
 def sanitize_article_text(html, plaintext=False):

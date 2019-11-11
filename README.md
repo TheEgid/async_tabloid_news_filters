@@ -42,6 +42,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
+usage: main.py [-h] [-host HOST] [-port PORT] [-redis_host REDIS_HOST] [-redis_port REDIS_PORT] [-use_cache]
+
+
 Сервис будет запущен по этому веб-адресу -
 
 **http://{ваш_localhost}:80**

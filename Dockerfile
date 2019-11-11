@@ -16,4 +16,4 @@ COPY . /opt
 
 EXPOSE 80
 
-CMD ["python3", "main.py", "-host", "0.0.0.0", "-port", "5000", "-redis_host", "redis", "-redis_port", "6379"]
+CMD ["python3", "main.py", "-host", "0.0.0.0", "-port", "5000", "-redis_host", "redis", "-redis_port", "6379", "-use_cache"]

@@ -8,7 +8,7 @@ import time
 from enum import Enum
 
 import aionursery
-import redis
+import aioredis
 
 
 class UrlsLimitError(Exception):
@@ -22,25 +22,31 @@ class ProcessingStatus(Enum):
     TIMEOUT = 'TIMEOUT'
 
 
-class RedisCache:
-    def __init__(self, host, port):
-        self.memo = redis.Redis(host=host, port=port, db=0)
+async def read_from_cache(url, host, port):
+    redis = await aioredis.create_redis((host, port))
+    try:
+        val = await redis.get(url)
+        data = pickle.loads(val)
+        logging.info(' READ REDIS CACHE DATA')
+        return data
+    except (TypeError, aioredis.RedisError, asyncio.CancelledError):
+        return None
+    finally:
+        redis.close()
+        await redis.wait_closed()
 
 
-def write_to_cashe(data, cashe):
+async def write_to_cache(data, host, port):
+    redis = await aioredis.create_redis((host, port))
     try:
         if data['status'] == 'OK':
-            cashe.memo.set(data['url'], pickle.dumps(data))
-    except redis.exceptions.ConnectionError:
+            await redis.set(data['url'], pickle.dumps(data))
+            logging.info(' WRITE REDIS CACHE DATA')
+    except (TypeError, aioredis.RedisError):
         return None
-
-
-def read_from_cashe(url, cashe):
-    try:
-        data = pickle.loads(cashe.memo.get(url))
-        return data
-    except (TypeError, redis.exceptions.ConnectionError):
-        return None
+    finally:
+        redis.close()
+        await redis.wait_closed()
 
 
 async def fetch(session, url):
@@ -69,7 +75,7 @@ async def execution_timer():
         end = time.monotonic() - start
         if end > _timeout:
             raise asyncio.TimeoutError
-        logging.info('Анализ закончен за {:.2f} сек'.format(end))
+        logging.info(' Analyzed in {:.2f} sec'.format(end))
 
 
 def get_charged_words(folder_name):
@@ -90,4 +96,6 @@ def get_args_parser():
     parser.add_argument('-port', type=int, default=80)
     parser.add_argument('-redis_host', default='localhost')
     parser.add_argument('-redis_port', type=int, default=6379)
+    parser.add_argument('-use_cache', action='store_true', default=False,
+                        help='Redis cache ON/OFF checker')
     return parser

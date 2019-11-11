@@ -10,7 +10,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 sys.path.extend(['../tools', '../adapters', '.', '..'])
 
 from tools.helpers import create_handy_nursery
-from main import run_server
+# from main import run_server
 
 # https://aiohttp.readthedocs.io/en/stable/testing.html
 
