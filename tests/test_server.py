@@ -1,18 +1,18 @@
-import asyncio
+import json
 import sys
-import unittest
+from functools import partial
 
-import asynctest
+import pymorphy2
 import pytest
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 sys.path.extend(['../tools', '../adapters', '.', '..'])
 
-from tools.helpers import create_handy_nursery
-# from main import run_server
+from helpers import get_charged_words
+from helpers import ProcessingStatus
+from main import get_handler
 
-# https://aiohttp.readthedocs.io/en/stable/testing.html
 
 TEST_ARTICLES = [
     'https://inosmi.ru/economic/20191101/246146220.html',
@@ -20,75 +20,59 @@ TEST_ARTICLES = [
     'https://inosmi.ru/politic/20191101/246151423.html',
     'https://inosmi.ru/politic/20191101/246150929.html',
     'https://inosmi.ru/economic/20190629/245384784.html',
-    'https://9__9.com',
-    'https://inosmi.ru/politic/20191108/246190685.html'
+    'https://inosmi.ru/politic/20191108/246190685.html',
+    'https://plantarum.livejournal.com/473023.html',
+    'https://dvmn.org/filer/canonical/1561832205/162/',
+    'https://inosmi.ru/politic/20191108/246190685.html',
     'https://plantarum.livejournal.com/473023.html',
     'https://dvmn.org/filer/canonical/1561832205/162/'
 ]
 
 
-
-async def say(what, when):
-    await asyncio.sleep(when)
-    print(what)
-    return what
+@pytest.fixture
+def charged_words_fixture():
+    return get_charged_words('../charged_dict')
 
 
-@pytest.mark.server
-class TestAsyncMain(asynctest.TestCase):
-
-    async def test_say(self):
-        async with create_handy_nursery() as nursery:
-            case = await nursery.start_soon(say('Privet!', 0))
-            print(case)
-        self.assertNotEqual('qPrivet!', case)
-        self.assertEqual('Privet!', case)
+@pytest.fixture
+def morph_fixture():
+    return pymorphy2.MorphAnalyzer()
 
 
 @pytest.mark.server
-class MyAppTestCase(AioHTTPTestCase):
-
+class TestApp(AioHTTPTestCase):
     async def get_application(self):
-        #run_server()
-        # async def hello(request):
-        #     return web.Response(text='Hello, world')
-
+        handler = partial(get_handler, charged_words_fixture, morph_fixture)
         app = web.Application()
-        app.router.add_get('/', run_server)
-
+        app.router.add_get('/', handler)
         return app
 
     @unittest_run_loop
-    async def test_example(self):
-        resp = await self.client.request("GET", "/")
+    async def test_no_urls(self):
+        resp = await self.client.request("GET", "")
+        self.assertTrue(resp.status == 400)
+        resp_text = await resp.text()
+        handler_results = json.loads(resp_text)
+        self.assertEqual(handler_results['error'], 'no urls')
 
-        print(resp.status)
+    @unittest_run_loop
+    async def test_too_many_urls(self):
+        link = f"?urls={','.join(TEST_ARTICLES)}"
+        resp = await self.client.request("GET", link)
+        self.assertTrue(resp.status == 400)
+        resp_text = await resp.text()
+        handler_results = json.loads(resp_text)
+        self.assertEqual(handler_results['error'], "too many urls in request, should be 10 or less")
+
+    @unittest_run_loop
+    async def test_bad_url(self):
+        link = f"?urls={TEST_ARTICLES[6]}"
+        resp = await self.client.request("GET", link)
         self.assertTrue(resp.status == 200)
-        text = await resp.text()
-        print(text)
-        breakpoint()
-        self.assertIn("Hello, world", text)
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-# https://aiohttp.readthedocs.io/en/stable/web_advanced.html
-
-
-# async def shutdown(server, app, handler):
-
-#    server.close()
-#    await server.wait_closed()
-#    app.client.close()  # database connection close
-#    await app.shutdown()
-#    await handler.finish_connections(10.0)
-#    await app.cleanup()
-
-
-# self.assertDictEqual(
-        #     {'urls':
-        #          ['https://ya.ru', 'https://google.com']
-        #      },
-        #     result)
-        #self.loop.run_until_complete(test_get_route())
+        resp_text = await resp.text()
+        handler_results = json.loads(resp_text)[0]
+        status = ProcessingStatus.PARSING_ERROR
+        self.assertEqual(handler_results['status'], status.value)
+        self.assertEqual(handler_results['url'], TEST_ARTICLES[6])
+        self.assertEqual(handler_results['score'], None)
+        self.assertEqual(handler_results['words_count'], None)
