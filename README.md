@@ -7,22 +7,22 @@
 В перспективе можно создать универсальный адаптер, подходящий для всех сайтов, но его разработка будет сложной и потребует дополнительных времени и сил.
 
 
-### Предпочительнее установить на ОС LINUX- установить с помощью Docker и docker-compose
+### Предпочительнее установить на ОС LINUX с помощью Docker и docker-compose
 
 Установка будет сделана с доступом к программе через "обратный прокси" [Nginx](https://nginx.org/ru/) и кеширование c помощью [Redis](https://redis.io/).
-
 Скачиваем файлы.
 Переходим в папку с файлами.
 
-установка -
 ```
 make build
 ```
 режим "демона" -
+
 ```
 make run
 ```
 режим вывода логов -
+
 ```
 make run_logs
 ```
@@ -33,6 +33,7 @@ make run_logs
 
 Python>=3.8.0 должен быть уже установлен. Для установки зависимостей рекомендуется создать виртуальное окружение. 
 Затем используйте pip для установки зависимостей:
+
 ```
 pip install -r requirements.txt
 ```
@@ -41,49 +42,48 @@ pip install -r requirements.txt
 
 Переходим в каталог с программой
 Команда -
+
 ```
 python main.py
 ```
 
-
 Можно также запускать с аргументами, кроме текста сообщения аргументы имеют параметры по умолчанию.
-
-optional arguments:
 
 **usage: main.py [-h] [-host HOST] [-port PORT] [-redis_host REDIS_HOST] [-redis_port REDIS_PORT] [-use_cache]**
 
-optional arguments:
-  -h, --help            show this help message and exit
-  
-  -host HOST
-  
-  -port PORT
-  
-  -redis_host REDIS_HOST
-  
-  -redis_port REDIS_PORT
-  
-  -use_cache            Redis cache ON/OFF checker (default: False)
+
+`optional arguments:`
+
+
+`-h, --help            show this help message and exit`
+
+`-host HOST`
+
+`-port PORT`
+
+`-redis_host REDIS_HOST`
+
+`-redis_port REDIS_PORT`
+
+`-use_cache            Redis cache ON/OFF checker (default: False)`
 
 
 Сервис будет запущен по этому веб-адресу -
 
-**http://{ваш_localhost}:80**
-
+*http://{ваш_localhost}:80*
 
 Браузер будет принимать запросы вида:
 
-**http://{ваш_localhost}?urls=url_статьи**
+*http://{ваш_localhost}?urls=url_статьи*
 
-**http://{ваш_localhost}?urls=url_статьи1,url_статьи2**
+*http://{ваш_localhost}?urls=url_статьи1,url_статьи2*
 
 Максимум 10 статей в одной ссылке.
 
-
-Браузер будет отдавать результ в формате JSON. Пример -
+Браузер будет отдавать результ в формате JSON.
+Пример -
 
 ![](https://i.ibb.co/4WYKQS8/image.png)
-
 
 # Как запустить тесты
 
@@ -93,11 +93,11 @@ optional arguments:
 ```
 python -m pytest
 ```
+
 Docker
 ```
 make test
 ```
-
 
 # Цели проекта
 
