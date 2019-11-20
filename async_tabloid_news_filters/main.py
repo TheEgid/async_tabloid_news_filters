@@ -3,10 +3,9 @@ import logging
 import os
 import sys
 from functools import partial
-
 import pymorphy2
 from aiohttp import ClientSession, web
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
 from async_timeout import timeout
 
 sys.path.extend(['./tools', './adapters'])
@@ -14,7 +13,7 @@ sys.path.extend(['./tools', './adapters'])
 from inosmi_ru import ArticleNotFoundError
 from inosmi_ru import sanitize_article_text
 from helpers import ProcessingStatus
-from helpers import UrlsLimitError
+from helpers import UrlLimitError
 from helpers import create_handy_nursery
 from helpers import execution_timer
 from helpers import fetch
@@ -50,7 +49,7 @@ async def process_article(article_url, charged_words, morph):
             article_words = await split_by_words(morph, clean_text)
         jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
         word_count = len(article_words)
-    except ClientConnectorError:
+    except (ClientConnectorError, InvalidURL):
         status = ProcessingStatus.FETCH_ERROR
     except ArticleNotFoundError:
         status = ProcessingStatus.PARSING_ERROR
@@ -71,10 +70,10 @@ async def handler_helper(article_urls, charged_words, morph):
 
     for data_set in data_sets:
         _url, status, jaundice_rate, word_count = data_set
-        results = {"status": status.value,
-                   "url": _url,
-                   "score": jaundice_rate,
-                   "words_count": word_count}
+        results = {'status': status.value,
+                   'url': _url,
+                   'score': jaundice_rate,
+                   'words_count': word_count}
         handler_results.append(results)
         logging.info(f' {results=}')
     return handler_results
@@ -85,8 +84,7 @@ async def get_handler(charged_words, morph, request):
     try:
         article_urls = request.query['urls'].split(',')
         if len(article_urls) > 10:
-            raise UrlsLimitError
-
+            raise UrlLimitError
         if args.use_cache:
             memo_results = [await read_from_cache(
                 _url, args.redis_host, args.redis_port) for _url in article_urls]
@@ -108,13 +106,11 @@ async def get_handler(charged_words, morph, request):
         return web.json_response([res for res in memo_results if res])
 
     except KeyError:
-        return web.json_response(data={
-            'error': 'no urls'},
-            status=400)
+        return web.json_response(data={'ERROR': 'no urls'}, status=400)
 
-    except UrlsLimitError:
-        return web.json_response(data={
-            'error': 'too many urls in request, should be 10 or less'},
+    except UrlLimitError:
+        return web.json_response(
+            data={'ERROR': 'too many urls in request, should be 10 or less'},
             status=400)
 
 
@@ -133,6 +129,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# http://127.0.0.1/?urls=https://inosmi.ru/economic/20190629/245384784.html,https://inosmi.ru/economic/20191101/246146220.html,https://9__9.com%27

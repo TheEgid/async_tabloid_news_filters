@@ -12,7 +12,6 @@ from text_tools import has_latin_letters
 from text_tools import split_by_words
 
 
-@pytest.mark.text_tools
 class TestAsyncTextTools(asynctest.TestCase):
     async def test_split_by_words(self):
         # Экземпляры MorphAnalyzer занимают 10-15Мб RAM т.к. загружают в память много данных
@@ -31,7 +30,6 @@ class TestAsyncTextTools(asynctest.TestCase):
                              ['удивительно', 'это', 'стать', 'начало'])
 
 
-@pytest.mark.text_tools
 class TestTextTools(unittest.TestCase):
     def test_has_latin_letters(self):
         case = tuple(map(has_latin_letters, ('string', 'stringЮ', 'Проверка1')))

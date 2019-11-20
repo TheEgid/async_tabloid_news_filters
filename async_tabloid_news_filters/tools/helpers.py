@@ -3,15 +3,20 @@ import asyncio
 import contextlib
 import logging
 import os
+import sys
 import pickle
 import time
 from enum import Enum
-
 import aionursery
 import aioredis
+from aiohttp.client_exceptions import ClientResponseError
+
+sys.path.extend(['./tools', './adapters', '.', '..'])
+
+from inosmi_ru import ArticleNotFoundError
 
 
-class UrlsLimitError(Exception):
+class UrlLimitError(Exception):
     pass
 
 
@@ -50,9 +55,12 @@ async def write_to_cache(data, host, port):
 
 
 async def fetch(session, url):
-    async with session.get(url) as response:
-        response.raise_for_status()
-        return await response.text()
+    try:
+        async with session.get(url) as response:
+            response.raise_for_status()
+            return await response.text()
+    except ClientResponseError:
+        raise ArticleNotFoundError
 
 
 @contextlib.asynccontextmanager

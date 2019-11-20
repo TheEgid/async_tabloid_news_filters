@@ -7,9 +7,12 @@
 В перспективе можно создать универсальный адаптер, подходящий для всех сайтов, но его разработка будет сложной и потребует дополнительных времени и сил.
 
 
-### Предпочительно - как установить с помощью Docker и docker-compose
+### Предпочительнее установить на ОС LINUX- установить с помощью Docker и docker-compose
 
-Приложение будет установлено с доступом через "обратный прокси" Nginx.
+Установка будет сделана с доступом к программе через "обратный прокси" [Nginx](https://nginx.org/ru/) и кеширование c помощью [Redis](https://redis.io/).
+
+Скачиваем файлы.
+Переходим в папку с файлами.
 
 установка -
 ```
@@ -35,19 +38,38 @@ pip install -r requirements.txt
 ```
 
 ### Использование
+
 Переходим в каталог с программой
 Команда -
-
 ```
 python main.py
 ```
 
-usage: main.py [-h] [-host HOST] [-port PORT] [-redis_host REDIS_HOST] [-redis_port REDIS_PORT] [-use_cache]
+
+Можно также запускать с аргументами, кроме текста сообщения аргументы имеют параметры по умолчанию.
+
+optional arguments:
+
+**usage: main.py [-h] [-host HOST] [-port PORT] [-redis_host REDIS_HOST] [-redis_port REDIS_PORT] [-use_cache]**
+
+optional arguments:
+  -h, --help            show this help message and exit
+  
+  -host HOST
+  
+  -port PORT
+  
+  -redis_host REDIS_HOST
+  
+  -redis_port REDIS_PORT
+  
+  -use_cache            Redis cache ON/OFF checker (default: False)
 
 
 Сервис будет запущен по этому веб-адресу -
 
 **http://{ваш_localhost}:80**
+
 
 Браузер будет принимать запросы вида:
 
@@ -57,14 +79,17 @@ usage: main.py [-h] [-host HOST] [-port PORT] [-redis_host REDIS_HOST] [-redis_p
 
 Максимум 10 статей в одной ссылке.
 
+
 Браузер будет отдавать результ в формате JSON. Пример -
+
+![](https://i.ibb.co/4WYKQS8/image.png)
 
 
 # Как запустить тесты
 
 Для тестирования используется [pytest](https://docs.pytest.org/en/latest/), тесты созданы для основного функционала и фрагментов кода сложного в отладке: text_tools.py и адаптеры. 
 
-**Запуск всех тестов -**
+**Запуск тестов -**
 ```
 python -m pytest
 ```
@@ -72,27 +97,6 @@ Docker
 ```
 make test
 ```
-**Запуск основного теста -**
-```
-python -m pytest -m server
-```
-Docker
-```
-make test_server
-```
-**Запуск отдельных тестов -**
-```
-python -m pytest -m adapters_inosmi_ru
-
-python -m pytest -m text_tools
-```
-Docker
-```
-make test_adapters
-
-make test_tools
-```
-
 
 
 # Цели проекта
