@@ -9,6 +9,7 @@ from inosmi_ru import ArticleNotFoundError
 from inosmi_ru import sanitize_article_text
 
 
+@pytest.mark.adapters_inosmi_ru
 class TestInosmiRu(unittest.TestCase):
 
     def test_sanitize_article_text(self):

@@ -92,11 +92,17 @@ python main.py
 **Запуск тестов -**
 ```
 python -m pytest
+python -m pytest -m adapters_inosmi_ru
+python -m pytest -m text_tools
+python -m pytest -m server
 ```
 
 Docker
 ```
 make test
+make test_adapters
+make test_tools
+make test_server
 ```
 
 # Цели проекта

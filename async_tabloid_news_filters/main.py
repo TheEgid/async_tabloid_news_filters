@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from functools import partial
+
 import pymorphy2
 from aiohttp import ClientSession, web
 from aiohttp.client_exceptions import ClientConnectorError, InvalidURL
@@ -24,14 +25,6 @@ from text_tools import calculate_jaundice_rate
 from text_tools import split_by_words
 
 
-args = get_args_parser().parse_args()
-
-
-def get_clean_data(_html):
-    clean_text = sanitize_article_text(_html)
-    return clean_text
-
-
 async def get_article_text_by_url(article_url):
     _timeout = 3
     async with timeout(_timeout):
@@ -44,7 +37,7 @@ async def process_article(article_url, charged_words, morph):
     try:
         status = ProcessingStatus.OK
         html_content = await get_article_text_by_url(article_url)
-        clean_text = get_clean_data(html_content)
+        clean_text = sanitize_article_text(html_content)
         async with execution_timer():
             article_words = await split_by_words(morph, clean_text)
         jaundice_rate = calculate_jaundice_rate(article_words, charged_words)
@@ -79,15 +72,15 @@ async def handler_helper(article_urls, charged_words, morph):
     return handler_results
 
 
-async def get_handler(charged_words, morph, request):
+async def get_handler(charged_words, morph, redis_host, redis_port, use_cache, request):
     memo_results = list()
     try:
         article_urls = request.query['urls'].split(',')
         if len(article_urls) > 10:
             raise UrlLimitError
-        if args.use_cache:
+        if use_cache:
             memo_results = [await read_from_cache(
-                _url, args.redis_host, args.redis_port) for _url in article_urls]
+                _url, redis_host, redis_port) for _url in article_urls]
 
         memo_article_urls = [res['url'] for res in memo_results if res]
 
@@ -97,11 +90,11 @@ async def get_handler(charged_words, morph, request):
             async with create_handy_nursery() as nursery:
                 handler_results = await nursery.start_soon(
                     handler_helper(urls_to_process, charged_words, morph))
-                if all([handler_results, args.use_cache]):
+                if all([handler_results, use_cache]):
                     for process_res in handler_results:
                         await nursery.start_soon(write_to_cache(process_res,
-                                                                args.redis_host,
-                                                                args.redis_port))
+                                                                redis_host,
+                                                                redis_port))
                 memo_results.extend(handler_results)
         return web.json_response([res for res in memo_results if res])
 
@@ -121,7 +114,9 @@ def main():
     logging.getLogger('pymorphy2.opencorpora_dict.wrapper').setLevel(logging.ERROR)
     charged_words = get_charged_words('charged_dict')
     morph = pymorphy2.MorphAnalyzer()
-    handler = partial(get_handler, charged_words, morph)
+    args = get_args_parser().parse_args()
+    handler = partial(get_handler, charged_words, morph,
+                      args.redis_host, args.redis_port, args.use_cache)
     app = web.Application()
     app.add_routes([web.get('/', handler)])
     web.run_app(app=app, host=args.host, port=args.port)

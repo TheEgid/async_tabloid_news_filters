@@ -1,13 +1,15 @@
 import json
 import sys
 from functools import partial
+
 import pymorphy2
-import asyncio
+import pytest
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 sys.path.extend(['../tools', '../adapters', '.', '..'])
 
+from helpers import get_args_parser
 from helpers import get_charged_words
 from helpers import ProcessingStatus
 from main import get_handler
@@ -28,14 +30,21 @@ TEST_ARTICLES = [
 ]
 
 
+@pytest.mark.server
 class TestApp(AioHTTPTestCase):
+
     def setUp(self):
+        args = get_args_parser().parse_args([])
         self.charged_words = get_charged_words('./charged_dict')
         self.morph = pymorphy2.MorphAnalyzer()
+        self.redis_host = args.redis_host
+        self.redis_port = args.redis_port
+        self.use_cache = args.use_cache
         super().setUp()
 
     async def get_application(self):
-        handler = partial(get_handler, self.charged_words, self.morph)
+        handler = partial(get_handler, self.charged_words, self.morph,
+                          self.redis_host, self.redis_port, self.use_cache)
         app = web.Application()
         app.router.add_get('/', handler)
         return app

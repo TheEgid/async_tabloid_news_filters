@@ -11,3 +11,12 @@ run_logs:
 
 test:
 	$(COMMAND) "pytest"
+
+test_server:
+	$(COMMAND) "pytest -m server"
+
+test_adapters:
+	$(COMMAND) "pytest -m adapters_inosmi_ru"
+
+test_tools:
+	$(COMMAND) "pytest -m text_tools"
