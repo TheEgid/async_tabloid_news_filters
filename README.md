@@ -69,13 +69,13 @@ python main.py
 
 Сервис будет запущен по этому веб-адресу -
 
-###### *http://{ваш_localhost}:80*
+*http://{ваш_localhost}:80*
 
 и будет принимать запросы вида:
 
-###### *http://{ваш_localhost}?urls=url_статьи*
+*http://{ваш_localhost}?urls=url_статьи*
 
-###### *http://{ваш_localhost}?urls=url_статьи1,url_статьи2*
+*http://{ваш_localhost}?urls=url_статьи1,url_статьи2*
 
 Максимум 10 url статей.
 
