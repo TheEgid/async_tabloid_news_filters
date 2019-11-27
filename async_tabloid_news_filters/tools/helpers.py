@@ -3,7 +3,6 @@ import asyncio
 import contextlib
 import logging
 import os
-import sys
 import pickle
 import time
 from enum import Enum
@@ -11,9 +10,8 @@ import aionursery
 import aioredis
 from aiohttp.client_exceptions import ClientResponseError
 
-sys.path.extend(['./tools', './adapters', '.', '..'])
 
-from inosmi_ru import ArticleNotFoundError
+from adapters.inosmi_ru import ArticleNotFoundError
 
 
 class UrlLimitError(Exception):
@@ -75,8 +73,7 @@ async def create_handy_nursery():
 
 
 @contextlib.asynccontextmanager
-async def execution_timer():
-    _timeout = 3
+async def measure_execution_time(_timeout):
     async with create_handy_nursery() as nursery:
         start = time.monotonic()
         yield nursery

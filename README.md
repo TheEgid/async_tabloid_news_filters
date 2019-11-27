@@ -67,20 +67,20 @@ python main.py
 
 `-use_cache            Redis cache ON/OFF checker (default: False)`
 
-
 Сервис будет запущен по этому веб-адресу -
 
-*http://{ваш_localhost}:80*
+###### *http://{ваш_localhost}:80*
 
-Браузер будет принимать запросы вида:
+и будет принимать запросы вида:
 
-*http://{ваш_localhost}?urls=url_статьи*
+###### *http://{ваш_localhost}?urls=url_статьи*
 
-*http://{ваш_localhost}?urls=url_статьи1,url_статьи2*
+###### *http://{ваш_localhost}?urls=url_статьи1,url_статьи2*
 
-Максимум 10 статей в одной ссылке.
+Максимум 10 url статей.
 
 Браузер будет отдавать результ в формате JSON.
+
 Пример -
 
 ![](https://i.ibb.co/4WYKQS8/image.png)

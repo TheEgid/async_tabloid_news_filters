@@ -1,3 +1,4 @@
+import asyncio
 import re
 import string
 
@@ -25,6 +26,7 @@ async def split_by_words(morph, text):
             if len(normalized_word) > 2 or normalized_word == 'не':
                 words.append(normalized_word)
     splitted = [word for word in words if not has_latin_letters(word)]
+    await asyncio.sleep(0)  # — это команда корутине «Дай поработать другим!» https://devman.org/encyclopedia/async_python/coroutines/
     return [word for word in splitted if word]
 
 

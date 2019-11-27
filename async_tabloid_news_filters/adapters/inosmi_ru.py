@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
-from exceptions import ArticleNotFoundError
-from html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
+from .exceptions import ArticleNotFoundError
+from .html_tools import remove_buzz_attrs, remove_buzz_tags, remove_all_tags
 
 
 def sanitize_article_text(html, plaintext=False):

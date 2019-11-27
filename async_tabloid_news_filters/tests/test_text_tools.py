@@ -1,23 +1,18 @@
-import sys
 import unittest
-
+import pytest
 import aionursery
 import asynctest
 import pymorphy2
-import pytest
 
-sys.path.append('../tools')
-from text_tools import calculate_jaundice_rate
-from text_tools import has_latin_letters
-from text_tools import split_by_words
+from tools.text_tools import calculate_jaundice_rate
+from tools.text_tools import has_latin_letters
+from tools.text_tools import split_by_words
 
 
 @pytest.mark.text_tools
 class TestAsyncTextTools(asynctest.TestCase):
 
     async def test_split_by_words(self):
-        # Экземпляры MorphAnalyzer занимают 10-15Мб RAM т.к. загружают в память много данных
-        # Старайтесь ораганизовать свой код так, чтоб создавать экземпляр MorphAnalyzer заранее и в единственном числе
         morph = pymorphy2.MorphAnalyzer()
         async with aionursery.Nursery() as nursery:
             case1 = await nursery.start_soon(

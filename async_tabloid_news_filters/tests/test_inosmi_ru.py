@@ -1,12 +1,9 @@
-import sys
 import unittest
-
 import pytest
 import requests
 
-sys.path.append('./adapters')
-from inosmi_ru import ArticleNotFoundError
-from inosmi_ru import sanitize_article_text
+from adapters.inosmi_ru import ArticleNotFoundError
+from adapters.inosmi_ru import sanitize_article_text
 
 
 @pytest.mark.adapters_inosmi_ru
