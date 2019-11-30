@@ -26,15 +26,15 @@ async def get_article_text_by_url(article_url, _timeout):
             return await fetch(session, article_url)
 
 
-def add_to_results_dict(raw_data_sets):
+def serialize_results(raw_data_sets):
     for data_set in raw_data_sets:
         _url, status, jaundice_rate, word_count = data_set.result()
-        results_dict = ({'status': status.value,
-                         'url': _url,
-                         'score': jaundice_rate,
-                         'words_count': word_count})
-        logging.info(f' {results_dict=}')
-        yield results_dict
+        serialized_results_dict = ({'status': status.value,
+                                    'url': _url,
+                                    'score': jaundice_rate,
+                                    'words_count': word_count})
+        logging.info(f' {serialized_results_dict=}')
+        yield serialized_results_dict
 
 
 async def process_article(article_url, charged_words, morph):
@@ -65,10 +65,11 @@ async def process_articles(article_urls, charged_words, morph):
             parallel_tasks.append(nursery.start_soon(process_article(
                 article_url, charged_words, morph)))
             raw_data_sets, _ = await asyncio.wait(parallel_tasks)
-    return list(add_to_results_dict(raw_data_sets))
+    return list(serialize_results(raw_data_sets))
 
 
-async def get_handler(charged_words, morph, redis_host, redis_port, use_cache, request):
+async def handle_request(charged_words, morph, redis_host, redis_port,
+                         use_cache, request):
     memo_results = list()
     try:
         article_urls = request.query['urls'].split(',')
@@ -108,7 +109,7 @@ def main():
     charged_words = get_charged_words('charged_dict')
     morph = pymorphy2.MorphAnalyzer()
     args = get_args_parser().parse_args()
-    handler = partial(get_handler, charged_words, morph,
+    handler = partial(handle_request, charged_words, morph,
                       args.redis_host, args.redis_port, args.use_cache)
     app = web.Application()
     app.add_routes([web.get('/', handler)])

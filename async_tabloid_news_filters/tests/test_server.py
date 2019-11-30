@@ -8,7 +8,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 from tools.helpers import get_args_parser
 from tools.helpers import get_charged_words
 from tools.helpers import ProcessingStatus
-from main import get_handler
+from main import handle_request
 
 
 TEST_ARTICLES = [
@@ -39,7 +39,7 @@ class TestApp(AioHTTPTestCase):
         super().setUp()
 
     async def get_application(self):
-        handler = partial(get_handler, self.charged_words, self.morph,
+        handler = partial(handle_request, self.charged_words, self.morph,
                           self.redis_host, self.redis_port, self.use_cache)
         app = web.Application()
         app.router.add_get('/', handler)
